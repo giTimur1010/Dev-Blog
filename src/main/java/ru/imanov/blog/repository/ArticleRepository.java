@@ -6,8 +6,9 @@ import ru.imanov.blog.entity.Article;
 import ru.imanov.blog.entity.User;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ArticleRepository extends JpaRepository<Article, Long> {
-    public List<Article> findAllByAuthor(User author);
+    public Optional<List<Article>> findAllByAuthorId(Long id);
 }
