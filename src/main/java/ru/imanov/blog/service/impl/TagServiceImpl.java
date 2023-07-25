@@ -63,7 +63,7 @@ public class TagServiceImpl implements TagService {
         Optional<Tag> tagFromDb = tagRepository.findById(id);
 
         if (tagFromDb.isEmpty()){
-            throw new TagNotFoundException("tag not found by id", false);
+            throw new TagNotFoundException("tag not found by id");
         }
 
         return tagFromDb.get();

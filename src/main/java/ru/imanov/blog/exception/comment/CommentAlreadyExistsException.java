@@ -4,6 +4,9 @@ import org.springframework.http.HttpStatus;
 import ru.imanov.blog.exception.common.BaseException;
 
 public class CommentAlreadyExistsException extends BaseException {
+    public CommentAlreadyExistsException(String message) {
+        super(message, false, HttpStatus.BAD_REQUEST);;
+    }
     public CommentAlreadyExistsException(String message, boolean isLogged) {
         super(message, isLogged, HttpStatus.BAD_REQUEST);
     }

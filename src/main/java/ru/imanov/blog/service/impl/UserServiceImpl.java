@@ -73,7 +73,7 @@ public class UserServiceImpl implements UserService {
         Optional<User> userFromDb = userRepository.findById(id);
 
         if (userFromDb.isEmpty()){
-            throw new UserNotFoundException("user not found by id", false);
+            throw new UserNotFoundException("user not found by id");
         }
 
         return userFromDb.get();
@@ -104,7 +104,7 @@ public class UserServiceImpl implements UserService {
         }
 
         if (user.getBirthDate() != null && user.getBirthDate().isAfter(LocalDate.now())){
-            throw new WrongDateException("the user's date of birth is incorrect", false);
+            throw new WrongDateException("the user's date of birth is incorrect");
         }
     }
 }

@@ -36,8 +36,7 @@ public class ArticleServiceImpl implements ArticleService {
     public Article update(Article article) throws ArticleNotFoundException {
         if (articleRepository.existsById(article.getId())){
             throw new ArticleNotFoundException(
-                    "the article cannot be updated because it is not in the database",
-                    false
+                    "the article cannot be updated because it is not in the database"
             );
         }
 
@@ -75,8 +74,7 @@ public class ArticleServiceImpl implements ArticleService {
         Optional<Article> articleFromDb = articleRepository.findById(id);
         if (articleFromDb.isEmpty()){
             throw new ArticleNotFoundException(
-                    "the article cannot be updated because it is not in the database",
-                    false
+                    "the article cannot be updated because it is not in the database"
             );
         }
 
@@ -85,26 +83,18 @@ public class ArticleServiceImpl implements ArticleService {
 
     /**
      * finds all the user's articles by id
-     * @param id - user id
+     * @param authorId - user id
      * @return - all user articles
-     * @throws ArticleNotFoundException - it is thrown out when the user has no articles
      */
     @Override
-    public List<Article> getAllUserArticles(Long id) throws ArticleNotFoundException{
-        Optional<List<Article>> articlesFromDb = articleRepository.findAllByAuthorId(id);
-
-        if (articlesFromDb.isEmpty()){
-            throw new ArticleNotFoundException("The user has no articles", true);
-        }
-
-        return articlesFromDb.get();
+    public List<Article> getAllUserArticles(Long authorId){
+        return articleRepository.findAllByAuthorId(authorId);
     }
 
     /**
      * deletes the article by id
      * @param id -  article id
      */
-
     @Override
     public void delete(Long id) {
         articleRepository.deleteById(id);
@@ -129,7 +119,7 @@ public class ArticleServiceImpl implements ArticleService {
         }
 
         if (article.getCreatedDate() != null && article.getCreatedDate().isAfter(LocalDateTime.now())){
-            throw new WrongDateException("wrong article created date", false);
+            throw new WrongDateException("wrong article created date");
         }
     }
 }

@@ -34,8 +34,7 @@ public class CommentServiceImpl implements CommentService {
     public Comment update(Comment comment) throws CommentNotFoundException {
         if (commentRepository.existsById(comment.getId())){
             throw new CommentNotFoundException(
-                    "the comment cannot be updated because it is not in the database",
-                    false
+                    "the comment cannot be updated because it is not in the database"
             );
         }
 
@@ -74,8 +73,7 @@ public class CommentServiceImpl implements CommentService {
 
         if (commentFromDb.isEmpty()){
             throw new CommentNotFoundException(
-                    "the comment cannot be updated because it is not in the database",
-                    false
+                    "the comment cannot be updated because it is not in the database"
             );
         }
 
@@ -84,26 +82,18 @@ public class CommentServiceImpl implements CommentService {
 
     /**
      * finds all the articles comments by id
-     * @param id - article id
+     * @param articleId - article id
      * @return - all article comments
-     * @throws CommentNotFoundException - it is thrown out when the article has no comments
      */
     @Override
-    public List<Comment> getAllArticleComments(Long id) throws CommentNotFoundException {
-        Optional<List<Comment>> commentFromDb = commentRepository.findAllByArticleId(id);
-
-        if (commentFromDb.isEmpty()){
-            throw new CommentNotFoundException("The article has no comments", true);
-        }
-
-        return commentFromDb.get();
+    public List<Comment> getAllArticleComments(Long articleId) throws CommentNotFoundException {
+        return commentRepository.findAllByArticleId(articleId);
     }
 
     /**
      * deletes the comment by id
      * @param id -  comment id
      */
-
     @Override
     public void delete(Long id) {
         commentRepository.deleteById(id);
@@ -129,7 +119,7 @@ public class CommentServiceImpl implements CommentService {
         }
 
         if (comment.getCreatedDate() != null && comment.getCreatedDate().isAfter(LocalDateTime.now())){
-            throw new WrongDateException("wrong comment created date", false);
+            throw new WrongDateException("wrong comment created date");
         }
     }
 }
