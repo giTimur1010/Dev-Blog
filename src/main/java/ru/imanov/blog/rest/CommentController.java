@@ -17,27 +17,27 @@ public class CommentController {
     private final CommentService commentService;
 
     @PostMapping
-    ResponseEntity<Comment> createComment(@RequestBody Comment comment){
+    public ResponseEntity<Comment> createComment(@RequestBody Comment comment){
         return ResponseEntity.status(HttpStatus.CREATED.value()).body(commentService.add(comment));
     }
 
     @GetMapping("/{id}")
-    ResponseEntity<Comment> GetCommentById(@PathVariable Long id){
+    public ResponseEntity<Comment> GetCommentById(@PathVariable Long id){
         return ResponseEntity.ok(commentService.getById(id));
     }
 
     @GetMapping("/users/{id}")
-    ResponseEntity<List<Comment>> getAllCommentsByArticleId(@PathVariable Long id){
+    public ResponseEntity<List<Comment>> getAllCommentsByArticleId(@PathVariable Long id){
         return ResponseEntity.ok(commentService.getAllArticleComments(id));
     }
 
     @PatchMapping
-    ResponseEntity<Comment> updateArticle(@RequestBody Comment comment){
+    public ResponseEntity<Comment> updateArticle(@RequestBody Comment comment){
         return ResponseEntity.ok(commentService.update(comment));
     }
 
     @DeleteMapping("/{id}")
-    ResponseEntity<?> deleteArticle(@PathVariable Long id){
+    public ResponseEntity<?> deleteArticle(@PathVariable Long id){
         commentService.delete(id);
         return ResponseEntity.ok().build();
     }

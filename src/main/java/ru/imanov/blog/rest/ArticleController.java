@@ -16,27 +16,27 @@ public class ArticleController {
     private final ArticleService articleService;
 
     @PostMapping
-    ResponseEntity<Article> createArticle(@RequestBody Article article){
+    public ResponseEntity<Article> createArticle(@RequestBody Article article){
         return ResponseEntity.status(HttpStatus.CREATED.value()).body(articleService.add(article));
     }
 
     @GetMapping("/{id}")
-    ResponseEntity<Article> GetArticleById(@PathVariable Long id){
+    public ResponseEntity<Article> GetArticleById(@PathVariable Long id){
         return ResponseEntity.ok(articleService.getById(id));
     }
 
     @GetMapping("/users/{id}")
-    ResponseEntity<List<Article>> getAllArticlesByAuthorId(@PathVariable Long id){
+    public ResponseEntity<List<Article>> getAllArticlesByAuthorId(@PathVariable Long id){
         return ResponseEntity.ok(articleService.getAllUserArticles(id));
     }
 
     @PatchMapping
-    ResponseEntity<Article> updateArticle(@RequestBody Article article){
+    public ResponseEntity<Article> updateArticle(@RequestBody Article article){
         return ResponseEntity.ok(articleService.update(article));
     }
 
     @DeleteMapping("/{id}")
-    ResponseEntity<?> deleteArticle(@PathVariable Long id){
+    public ResponseEntity<?> deleteArticle(@PathVariable Long id){
         articleService.delete(id);
         return ResponseEntity.ok().build();
     }
