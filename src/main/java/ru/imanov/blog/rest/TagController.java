@@ -9,7 +9,7 @@ import ru.imanov.blog.entity.User;
 import ru.imanov.blog.service.TagService;
 
 @RestController
-@RequestMapping("/v1/api/tags")
+@RequestMapping("/api/v1/tags")
 @RequiredArgsConstructor
 public class TagController {
     private final TagService tagService;

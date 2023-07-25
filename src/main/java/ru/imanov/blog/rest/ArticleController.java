@@ -10,7 +10,7 @@ import ru.imanov.blog.service.ArticleService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/v1/api/articles")
+@RequestMapping("/api/v1/articles")
 @RequiredArgsConstructor
 public class ArticleController {
     private final ArticleService articleService;

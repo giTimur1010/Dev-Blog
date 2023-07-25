@@ -8,7 +8,7 @@ import ru.imanov.blog.entity.User;
 import ru.imanov.blog.service.UserService;
 
 @RestController
-@RequestMapping("/v1/api/users")
+@RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
