@@ -7,7 +7,9 @@ import ru.imanov.blog.entity.Article;
 import ru.imanov.blog.exception.article.ArticleAlreadyExistsException;
 import ru.imanov.blog.exception.article.ArticleFieldsEmptyException;
 import ru.imanov.blog.exception.article.ArticleNotFoundException;
+import ru.imanov.blog.exception.common.NullIdException;
 import ru.imanov.blog.exception.common.WrongDateException;
+import ru.imanov.blog.exception.user.UserNotFoundException;
 import ru.imanov.blog.repository.ArticleRepository;
 import ru.imanov.blog.service.ArticleService;
 
@@ -31,12 +33,20 @@ public class ArticleServiceImpl implements ArticleService {
      * @param article - article to update
      * @return - updated article
      * @throws ArticleNotFoundException - it is thrown out when the article is not in the database
+     * @throws NullIdException - it is thrown out when the article has id = null
      */
     @Override
-    public Article update(Article article) throws ArticleNotFoundException {
-        if (articleRepository.existsById(article.getId())){
+    public Article update(Article article) throws ArticleNotFoundException,  NullIdException {
+        if (article.getId() == null){
+            throw new NullIdException("you cannot update a article with id = null");
+        }
+
+        if (!articleRepository.existsById(article.getId())){
             throw new ArticleNotFoundException(
-                    "the article cannot be updated because it is not in the database"
+                    String.format(
+                            "the article with id = %d cannot be updated because it is not in the database",
+                            article.getId()
+                    )
             );
         }
 
@@ -54,7 +64,9 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public Article add(Article article) throws ArticleAlreadyExistsException {
         if (article.getId() != null && articleRepository.existsById(article.getId())){
-            throw new ArticleAlreadyExistsException("the article is already in the database", true);
+            throw new ArticleAlreadyExistsException(
+                    String.format("the article with id = %d is already in the database", article.getId()),
+                    true);
         }
 
         checkArticle(article);
@@ -74,7 +86,7 @@ public class ArticleServiceImpl implements ArticleService {
         Optional<Article> articleFromDb = articleRepository.findById(id);
         if (articleFromDb.isEmpty()){
             throw new ArticleNotFoundException(
-                    "the article cannot be updated because it is not in the database"
+                    String.format("the article with id = %d cannot be updated because it is not in the database", id)
             );
         }
 
@@ -97,6 +109,15 @@ public class ArticleServiceImpl implements ArticleService {
      */
     @Override
     public void delete(Long id) {
+
+        if (!articleRepository.existsById(id)){
+            throw new UserNotFoundException(String.format(
+                    "a tag with id = %d cannot be deleted because he is not in the database",
+                    id
+                )
+            );
+        }
+
         articleRepository.deleteById(id);
     }
 

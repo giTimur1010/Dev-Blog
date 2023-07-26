@@ -7,7 +7,9 @@ import ru.imanov.blog.entity.Comment;
 import ru.imanov.blog.exception.comment.CommentFieldsEmptyException;
 import ru.imanov.blog.exception.comment.CommentNotFoundException;
 import ru.imanov.blog.exception.comment.CommentAlreadyExistsException;
+import ru.imanov.blog.exception.common.NullIdException;
 import ru.imanov.blog.exception.common.WrongDateException;
+import ru.imanov.blog.exception.user.UserNotFoundException;
 import ru.imanov.blog.repository.CommentRepository;
 import ru.imanov.blog.service.CommentService;
 
@@ -29,12 +31,21 @@ public class CommentServiceImpl implements CommentService {
      * @param comment - comment to update
      * @return - updated comment
      * @throws CommentNotFoundException - it is thrown out when the comment is not in the database
+     * @throws NullIdException - it is thrown out when the comment has id = null
      */
     @Override
-    public Comment update(Comment comment) throws CommentNotFoundException {
-        if (commentRepository.existsById(comment.getId())){
+    public Comment update(Comment comment) throws CommentNotFoundException, NullIdException {
+
+        if (comment.getId() == null){
+            throw new NullIdException("you cannot update a comment with id = null");
+        }
+
+        if (!commentRepository.existsById(comment.getId())){
             throw new CommentNotFoundException(
-                    "the comment cannot be updated because it is not in the database"
+                    String.format(
+                            "the comment with id = %d cannot be updated because it is not in the database",
+                            comment.getId()
+                    )
             );
         }
 
@@ -52,7 +63,10 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public Comment add(Comment comment) throws CommentAlreadyExistsException {
         if (comment.getId() != null && commentRepository.existsById(comment.getId())){
-            throw new CommentAlreadyExistsException("the comment is already in the database", true);
+            throw new CommentAlreadyExistsException(
+                    String.format("the comment with id = %d is already in the database", comment.getId()),
+                    true
+            );
         }
 
         checkComment(comment);
@@ -73,7 +87,7 @@ public class CommentServiceImpl implements CommentService {
 
         if (commentFromDb.isEmpty()){
             throw new CommentNotFoundException(
-                    "the comment cannot be updated because it is not in the database"
+                    String.format( "the comment with id = %d cannot be updated because it is not in the database", id)
             );
         }
 
@@ -86,7 +100,7 @@ public class CommentServiceImpl implements CommentService {
      * @return - all article comments
      */
     @Override
-    public List<Comment> getAllArticleComments(Long articleId) throws CommentNotFoundException {
+    public List<Comment> getAllArticleComments(Long articleId) {
         return commentRepository.findAllByArticleId(articleId);
     }
 
@@ -96,6 +110,15 @@ public class CommentServiceImpl implements CommentService {
      */
     @Override
     public void delete(Long id) {
+
+        if (!commentRepository.existsById(id)){
+            throw new UserNotFoundException(String.format(
+                    "a tag with id = %d cannot be deleted because he is not in the database",
+                    id
+                )
+            );
+        }
+
         commentRepository.deleteById(id);
     }
 
