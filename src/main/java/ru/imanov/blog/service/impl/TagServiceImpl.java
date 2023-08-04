@@ -3,15 +3,22 @@ package ru.imanov.blog.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import ru.imanov.blog.entity.AbstractEntity;
+import ru.imanov.blog.entity.Article;
 import ru.imanov.blog.entity.Tag;
+import ru.imanov.blog.exception.article.ArticleNotFoundException;
 import ru.imanov.blog.exception.common.NullIdException;
-import ru.imanov.blog.exception.tag.TagAlreadyExistsException;
 import ru.imanov.blog.exception.tag.TagFieldsEmptyException;
 import ru.imanov.blog.exception.tag.TagNotFoundException;
-import ru.imanov.blog.exception.user.UserNotFoundException;
+import ru.imanov.blog.repository.ArticleRepository;
 import ru.imanov.blog.repository.TagRepository;
+import ru.imanov.blog.rest.dto.request.tag.NewTagRequest;
+import ru.imanov.blog.rest.dto.request.tag.UpdateTagRequest;
+import ru.imanov.blog.rest.dto.response.tag.NewTagResponse;
+import ru.imanov.blog.rest.dto.response.tag.TagAllFields;
 import ru.imanov.blog.service.TagService;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -20,49 +27,105 @@ public class TagServiceImpl implements TagService {
 
     private final TagRepository tagRepository;
 
+    private final ArticleRepository articleRepository;
+
     /**
      * updates the tag
-     * @param tag - tag to update
+     * @param request - tag to update
      * @return - updated tag
-     * @throws TagNotFoundException - it is thrown out when the user is not in the database
+     * @throws TagNotFoundException - it is thrown out when the parent tag or children tag is not in the database.
+     * It is also thrown when the tag with the specified id is not in the database
      * @throws NullIdException - it is thrown out when the tag has id = null
+     * @throws ArticleNotFoundException - it is thrown out when the article to which the tag refers is not in the
+     * database
      */
-    @Override
-    public Tag update(Tag tag) throws TagNotFoundException, NullIdException {
 
-        if (tag.getId() == null){
+    @Override
+    public TagAllFields update(UpdateTagRequest request)
+            throws TagNotFoundException, NullIdException, ArticleNotFoundException {
+
+        if (request.getId() == null){
             throw new NullIdException("you cannot update a tag with id = null");
         }
 
-        if (!tagRepository.existsById(tag.getId())){
+        if (!tagRepository.existsById(request.getId())){
             throw new TagNotFoundException(
-                    String.format("the tag with id = %d cannot be updated because it is not found", tag.getId()),
+                    String.format("the tag with id = %d cannot be updated because it is not found", request.getId()),
                     true
             );
         }
 
+        if (request.getParentId() != null && !tagRepository.existsById(request.getParentId())){
+            throw new TagNotFoundException("it is not possible to update a tag with a non-existent parent tag");
+        }
+
+        if (request.getChildrenIds() != null) {
+            for (Long childrenId : request.getChildrenIds()) {
+                if (!tagRepository.existsById(childrenId)) {
+                    throw new TagNotFoundException("it is not possible to update a tag with a non-existent children tag");
+                }
+            }
+        }
+
+        if (request.getArticleIds() != null) {
+            for (Long articleId : request.getArticleIds()) {
+                if (!articleRepository.existsById(articleId)) {
+                    throw new ArticleNotFoundException("it is not possible to update a tag with a non-existent article");
+                }
+            }
+        }
+
+        Tag tag = Tag.builder()
+                .name(request.getName())
+                .build();
+
+        if (request.getParentId() != null){
+            tag.setParent(tagRepository.findById(request.getParentId()).get());
+        }
+
+        if (request.getChildrenIds() != null){
+            List<Tag> children = request.getChildrenIds().stream().
+                    map(id -> tagRepository.findById(id).get())
+                    .toList();
+
+            tag.setChildren(children);
+        }
+
+        if (request.getArticleIds() != null){
+            List<Article> articles = request.getArticleIds().stream()
+                    .map(id -> articleRepository.findById(id).get())
+                    .toList();
+
+            tag.setArticles(articles);
+        }
+
+        tag.setId(request.getId());
+
         checkTag(tag);
 
-        return tagRepository.save(tag);
+        return transform(tagRepository.save(tag));
     }
 
     /**
      * adds a tag
-     * @param tag - tag to add
+     * @param request - tag to add
      * @return - added tag
-     * @throws TagAlreadyExistsException - it is thrown out when the tag is already in the database
      */
     @Override
-    public Tag add(Tag tag) throws TagAlreadyExistsException {
-        if (tag.getId() != null && tagRepository.existsById(tag.getId())){
-            throw new TagAlreadyExistsException(
-                    String.format("the tag with id = %d cannot be added as it already exists", tag.getId()),
-                    true);
-        }
+    public NewTagResponse add(NewTagRequest request) {
+
+        Tag tag = Tag.builder()
+                .name(request.getName())
+                .build();
 
         checkTag(tag);
 
-        return tagRepository.save(tag);
+        Tag addedTag = tagRepository.save(tag);
+
+        return NewTagResponse.builder()
+                .id(addedTag.getId())
+                .name(addedTag.getName())
+                .build();
     }
 
     /**
@@ -72,25 +135,26 @@ public class TagServiceImpl implements TagService {
      * @throws TagNotFoundException - it is thrown out when the tag is not in the database
      */
     @Override
-    public Tag getById(Long id) throws TagNotFoundException {
+    public TagAllFields getById(Long id) throws TagNotFoundException {
         Optional<Tag> tagFromDb = tagRepository.findById(id);
 
         if (tagFromDb.isEmpty()){
             throw new TagNotFoundException(String.format("tag not found by id = %d", id));
         }
 
-        return tagFromDb.get();
+        return transform(tagFromDb.get());
     }
 
     /**
      * deletes a tag
      * @param id - tag id
+     * @throws TagNotFoundException - it is thrown out when there is no tag with the specified id
      */
     @Override
-    public void delete(Long id) {
+    public void delete(Long id) throws TagNotFoundException {
 
         if (!tagRepository.existsById(id)){
-            throw new UserNotFoundException(String.format(
+            throw new TagNotFoundException(String.format(
                     "a tag with id = %d cannot be deleted because he is not in the database",
                     id
                 )
@@ -109,5 +173,40 @@ public class TagServiceImpl implements TagService {
         if (StringUtils.isEmpty(tag.getName())){
             throw new TagFieldsEmptyException("Tag name is empty", true);
         }
+    }
+
+    /**
+     * transforms the Tag type into the TagAllFields type
+     * @param tag - tag to transform
+     * @return transformed tag
+     */
+
+    private TagAllFields transform(Tag tag){
+        TagAllFields tagAllFields = TagAllFields.builder()
+                .id(tag.getId())
+                .name(tag.getName())
+                .build();
+
+        if (tag.getParent() != null){
+            tagAllFields.setParentId(tag.getParent().getId());
+        }
+
+        if (tag.getChildren() != null){
+            List<Long> childrenIds = tag.getChildren().stream()
+                    .map(AbstractEntity::getId)
+                    .toList();
+
+            tagAllFields.setChildrenIds(childrenIds);
+        }
+
+        if (tag.getArticles() != null){
+            List<Long> articleIds = tag.getArticles().stream()
+                    .map(AbstractEntity::getId)
+                    .toList();
+
+            tagAllFields.setArticleIds(articleIds);
+        }
+
+        return tagAllFields;
     }
 }

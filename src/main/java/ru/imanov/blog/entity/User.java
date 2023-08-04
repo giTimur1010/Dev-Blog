@@ -1,10 +1,7 @@
 package ru.imanov.blog.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 
 import java.time.LocalDate;
@@ -18,13 +15,16 @@ import java.util.List;
 @Entity
 @Table(name = "usr", schema = "public")
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class User extends AbstractEntity{
     @Column(name = "avatar", length = 50)
     private String avatarUrl;
+
     @Column(name = "description", length = 250)
     private String description;
+
     @Column(name = "username", length = 100, nullable = false)
     private String username;
 
@@ -33,6 +33,7 @@ public class User extends AbstractEntity{
 
     @Column(name = "email", length = 250, nullable = false)
     private String email;
+
     @Column(name = "password", length = 200, nullable = false)
     private String password;
 

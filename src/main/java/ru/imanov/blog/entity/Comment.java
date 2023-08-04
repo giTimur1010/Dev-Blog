@@ -1,10 +1,8 @@
 package ru.imanov.blog.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
 import java.time.LocalDateTime;
 
 /**
@@ -15,10 +13,10 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "comment", schema = "public")
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Comment extends AbstractEntity{
-
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.DETACH)
     @JoinColumn(name = "id_user")
     private User author;

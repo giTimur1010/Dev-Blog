@@ -1,10 +1,14 @@
 package ru.imanov.blog.service;
 import ru.imanov.blog.entity.User;
+import ru.imanov.blog.rest.dto.request.user.NewUserRequest;
+import ru.imanov.blog.rest.dto.request.user.UpdateUserRequest;
+import ru.imanov.blog.rest.dto.response.user.NewUserResponse;
+import ru.imanov.blog.rest.dto.response.user.UserAllFields;
 
 public interface UserService {
-    User  update(User user);
-    User add(User user);
-    User getById(Long id);
+    UserAllFields update(UpdateUserRequest request);
+    NewUserResponse add(NewUserRequest request);
+    UserAllFields getById(Long id);
     void delete(Long id);
 
 }

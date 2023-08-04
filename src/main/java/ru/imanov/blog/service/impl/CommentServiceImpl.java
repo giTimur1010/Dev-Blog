@@ -3,14 +3,22 @@ package ru.imanov.blog.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import ru.imanov.blog.entity.Article;
 import ru.imanov.blog.entity.Comment;
+import ru.imanov.blog.exception.article.ArticleNotFoundException;
 import ru.imanov.blog.exception.comment.CommentFieldsEmptyException;
 import ru.imanov.blog.exception.comment.CommentNotFoundException;
 import ru.imanov.blog.exception.comment.CommentAlreadyExistsException;
 import ru.imanov.blog.exception.common.NullIdException;
 import ru.imanov.blog.exception.common.WrongDateException;
 import ru.imanov.blog.exception.user.UserNotFoundException;
+import ru.imanov.blog.repository.ArticleRepository;
 import ru.imanov.blog.repository.CommentRepository;
+import ru.imanov.blog.repository.UserRepository;
+import ru.imanov.blog.rest.dto.request.comment.NewCommentRequest;
+import ru.imanov.blog.rest.dto.request.comment.UpdateCommentRequest;
+import ru.imanov.blog.rest.dto.response.comment.CommentAllFields;
+import ru.imanov.blog.rest.dto.response.comment.NewCommentResponse;
 import ru.imanov.blog.service.CommentService;
 
 import java.time.LocalDateTime;
@@ -26,52 +34,117 @@ public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
 
+    private final UserRepository userRepository;
+
+    private final ArticleRepository articleRepository;
+
     /**
      * updates the comment
-     * @param comment - comment to update
+     * @param request - comment to update
      * @return - updated comment
      * @throws CommentNotFoundException - it is thrown out when the comment is not in the database
-     * @throws NullIdException - it is thrown out when the comment has id = null
+     * @throws NullIdException - it is thrown out when the comment has id = null or comment author has id = null
+     * or article has id = null.
      */
     @Override
-    public Comment update(Comment comment) throws CommentNotFoundException, NullIdException {
+    public CommentAllFields update(UpdateCommentRequest request) throws CommentNotFoundException, NullIdException {
 
-        if (comment.getId() == null){
+        if (request.getId() == null){
             throw new NullIdException("you cannot update a comment with id = null");
         }
 
-        if (!commentRepository.existsById(comment.getId())){
+        if (!commentRepository.existsById(request.getId())){
             throw new CommentNotFoundException(
                     String.format(
                             "the comment with id = %d cannot be updated because it is not in the database",
-                            comment.getId()
+                            request.getId()
                     )
             );
         }
 
-        checkComment(comment);
+        if (!userRepository.existsById(request.getAuthorId())){
+            throw new UserNotFoundException(
+                    String.format("The comment cannot be updated with a author who is not in the database. Author id = %d",
+                    request.getAuthorId())
 
-        return commentRepository.save(comment);
-    }
-
-    /**
-     * adds a comment to the database
-     * @param comment - comment to add
-     * @return - the added comment
-     * @throws CommentAlreadyExistsException - it is thrown out when the comment is already in the database
-     */
-    @Override
-    public Comment add(Comment comment) throws CommentAlreadyExistsException {
-        if (comment.getId() != null && commentRepository.existsById(comment.getId())){
-            throw new CommentAlreadyExistsException(
-                    String.format("the comment with id = %d is already in the database", comment.getId()),
-                    true
             );
+        }
+
+        if (!articleRepository.existsById(request.getArticleId())){
+            throw new ArticleNotFoundException(
+                String.format(
+                        "The comment cannot be updated with an article which is not in the database. Atricle id = %d",
+                        request.getArticleId())
+                );
+        }
+
+        Comment comment = Comment.builder()
+                .author(userRepository.findById(request.getAuthorId()).get())
+                .article(articleRepository.findById(request.getArticleId()).get())
+                .content(request.getContent())
+                .likesNumber(request.getLikesNumber())
+                .number(request.getNumber())
+                .createdDate(request.getCreatedDate())
+                .build();
+
+        comment.setId(request.getId());
+
+        if (comment.getCreatedDate() != null && comment.getCreatedDate().isAfter(LocalDateTime.now())){
+            throw new WrongDateException("wrong comment created date");
         }
 
         checkComment(comment);
 
-        return commentRepository.save(comment);
+        return transform(commentRepository.save(comment));
+    }
+
+    /**
+     * adds a comment to the database
+     * @param request - comment to add
+     * @return - the added comment
+     * @throws UserNotFoundException - it is thrown out when trying to add a comment with a non-existent user
+     * @throws ArticleNotFoundException - it is thrown out when trying to add a comment with a non-existent article
+     * @throws NullIdException - it is thrown out when thecomment author has id = null
+     * or article has id = null.
+     */
+    @Override
+    public NewCommentResponse add(NewCommentRequest request)
+            throws UserNotFoundException, ArticleNotFoundException, NullIdException {
+
+        if (request.getAuthorId() == null) {
+            throw new NullIdException("a comment can't have an author with id = null");
+        }
+
+        if (request.getArticleId() == null){
+            throw new NullIdException("a comment can't have an article with id = null");
+        }
+
+        if (!userRepository.existsById(request.getAuthorId())){
+            throw new UserNotFoundException("The comment cannot be created with a user who is not in the database");
+        }
+
+        if (!articleRepository.existsById(request.getArticleId())){
+            throw new UserNotFoundException("The comment cannot be created with an article which is not in the database");
+        }
+
+        Comment comment = Comment.builder()
+                .author(userRepository.findById(request.getAuthorId()).get())
+                .article(articleRepository.findById(request.getArticleId()).get())
+                .content(request.getContent())
+                .number(request.getNumber())
+                .build();
+
+        checkComment(comment);
+
+        Comment addedComment = commentRepository.save(comment);
+
+        return NewCommentResponse.builder()
+                .id(addedComment.getId())
+                .authorId(addedComment.getAuthor().getId())
+                .articleId(addedComment.getArticle().getId())
+                .content(addedComment.getContent())
+                .number(addedComment.getNumber())
+                .build();
     }
 
 
@@ -82,7 +155,7 @@ public class CommentServiceImpl implements CommentService {
      * @throws CommentNotFoundException - it is thrown out when there is no comment with the specified id
      */
     @Override
-    public Comment getById(Long id) throws CommentNotFoundException {
+    public CommentAllFields getById(Long id) throws CommentNotFoundException {
         Optional<Comment> commentFromDb = commentRepository.findById(id);
 
         if (commentFromDb.isEmpty()){
@@ -91,7 +164,7 @@ public class CommentServiceImpl implements CommentService {
             );
         }
 
-        return commentFromDb.get();
+        return transform(commentFromDb.get());
     }
 
     /**
@@ -100,19 +173,22 @@ public class CommentServiceImpl implements CommentService {
      * @return - all article comments
      */
     @Override
-    public List<Comment> getAllArticleComments(Long articleId) {
-        return commentRepository.findAllByArticleId(articleId);
+    public List<CommentAllFields> getAllArticleComments(Long articleId) {
+        return commentRepository.findAllByArticleId(articleId).stream()
+                .map(this::transform)
+                .toList();
     }
 
     /**
      * deletes the comment by id
      * @param id -  comment id
+     * @throws CommentNotFoundException - it is thrown out when there is no comment with the specified id
      */
     @Override
-    public void delete(Long id) {
+    public void delete(Long id) throws CommentNotFoundException{
 
         if (!commentRepository.existsById(id)){
-            throw new UserNotFoundException(String.format(
+            throw new CommentNotFoundException(String.format(
                     "a tag with id = %d cannot be deleted because he is not in the database",
                     id
                 )
@@ -140,9 +216,22 @@ public class CommentServiceImpl implements CommentService {
         ) {
             throw new CommentFieldsEmptyException("not all required fields are filled in in the comment", true);
         }
+    }
 
-        if (comment.getCreatedDate() != null && comment.getCreatedDate().isAfter(LocalDateTime.now())){
-            throw new WrongDateException("wrong comment created date");
-        }
+    /**
+     * transforms the Comment type into the CommentAllFields type
+     * @param comment - comment to transform
+     * @return transformed comment
+     */
+    private CommentAllFields transform(Comment comment){
+        return CommentAllFields.builder()
+                .id(comment.getId())
+                .authorId(comment.getAuthor().getId())
+                .articleId(comment.getArticle().getId())
+                .content(comment.getContent())
+                .likesNumber(comment.getLikesNumber())
+                .number(comment.getNumber())
+                .createdDate(comment.getCreatedDate())
+                .build();
     }
 }
