@@ -214,7 +214,7 @@ public class CommentServiceImpl implements CommentService {
             comment.getAuthor() == null ||
             comment.getArticle() == null
         ) {
-            throw new CommentFieldsEmptyException("not all required fields are filled in in the comment", true);
+            throw new CommentFieldsEmptyException("not all required fields are filled in the comment", true);
         }
     }
 

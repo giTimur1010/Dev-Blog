@@ -244,7 +244,7 @@ public class ArticleServiceImpl implements ArticleService {
             StringUtils.isEmpty(article.getContent()) ||
             article.getAuthor() == null
         ) {
-            throw new ArticleFieldsEmptyException("not all required fields are filled in in the article", true);
+            throw new ArticleFieldsEmptyException("not all required fields are filled in the article", true);
         }
     }
 
