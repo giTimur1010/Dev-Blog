@@ -3,6 +3,11 @@ package ru.imanov.blog.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import ru.imanov.blog.entity.RoleEnum;
 import ru.imanov.blog.exception.common.NullIdException;
 import ru.imanov.blog.exception.user.UserAlreadyExistsException;
 import org.springframework.stereotype.Service;
@@ -10,14 +15,17 @@ import ru.imanov.blog.entity.User;
 import ru.imanov.blog.exception.common.WrongDateException;
 import ru.imanov.blog.exception.user.UserFieldsEmptyException;
 import ru.imanov.blog.exception.user.UserNotFoundException;
+import ru.imanov.blog.repository.RoleRepository;
 import ru.imanov.blog.repository.UserRepository;
 import ru.imanov.blog.rest.dto.request.user.NewUserRequest;
+import ru.imanov.blog.rest.dto.request.user.RegistrationRequest;
 import ru.imanov.blog.rest.dto.request.user.UpdateUserRequest;
 import ru.imanov.blog.rest.dto.response.user.NewUserResponse;
 import ru.imanov.blog.rest.dto.response.user.UserAllFields;
 import ru.imanov.blog.service.UserService;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.Optional;
 
 
@@ -27,9 +35,11 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class UserServiceImpl implements UserService {
+public class UserServiceImpl implements UserService, UserDetailsService {
 
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     /**
      * updates the user
@@ -77,18 +87,26 @@ public class UserServiceImpl implements UserService {
 
 
     /**
-     * adds a user
+     * adds a user by Admin
      * @param request - user to add
      * @return - added user
-     * @throws UserAlreadyExistsException - it is thrown out when the user is already in the database
+     * @throws UserAlreadyExistsException - it is thrown out when the user with same username
+     * is already in the database
      */
     @Override
     public NewUserResponse add(NewUserRequest request) throws UserAlreadyExistsException {
 
+        if (userRepository.existsUserByUsername(request.getUsername())) {
+            throw new UserAlreadyExistsException(
+                    String.format("User with username $s already exists", request.getUsername())
+            );
+        }
+
         User user = User.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
-                .password(request.getPassword())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .roles(Collections.singleton(roleRepository.findByName(RoleEnum.USER.getName()).get()))
                 .build();
 
         checkUser(user);
@@ -100,6 +118,34 @@ public class UserServiceImpl implements UserService {
                 .email(addedUser.getEmail())
                 .username(addedUser.getUsername())
                 .build();
+    }
+
+    /**
+     * adds a user by User
+     * @param request - user to add
+     * @return - added user
+     * @throws UserAlreadyExistsException - it is thrown out when the user with same username
+     *  is already in the database
+     */
+    @Override
+    public void add(RegistrationRequest request)  throws UserAlreadyExistsException {
+
+        if (userRepository.existsUserByUsername(request.getUsername())) {
+            throw new UserAlreadyExistsException(
+                    String.format("User with username $s already exists", request.getUsername())
+            );
+        }
+
+        User user = User.builder()
+                .username(request.getUsername())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .roles(Collections.singleton(roleRepository.findByName(RoleEnum.USER.getName()).get()))
+                .build();
+
+        checkUser(user);
+
+        userRepository.save(user);
     }
 
 
@@ -169,5 +215,10 @@ public class UserServiceImpl implements UserService {
                 .email(user.getEmail())
                 .birthDate(user.getBirthDate())
                 .build();
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return userRepository.findByUsername(username).orElse(null);
     }
 }

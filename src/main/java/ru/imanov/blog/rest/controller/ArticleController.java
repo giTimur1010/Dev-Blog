@@ -3,6 +3,7 @@ package ru.imanov.blog.rest.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.imanov.blog.entity.Article;
 import ru.imanov.blog.rest.dto.request.article.NewArticleRequest;
@@ -25,21 +26,25 @@ public class ArticleController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     public ResponseEntity<ArticleAllFields> GetArticleById(@PathVariable Long id){
         return ResponseEntity.ok(articleService.getById(id));
     }
 
     @GetMapping("/users/{id}")
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     public ResponseEntity<List<ArticleAllFields>> getAllArticlesByAuthorId(@PathVariable Long id){
         return ResponseEntity.ok(articleService.getAllUserArticles(id));
     }
 
     @PatchMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<ArticleAllFields> updateArticle(@RequestBody UpdateArticleRequest request){
         return ResponseEntity.ok(articleService.update(request));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<?> deleteArticle(@PathVariable Long id){
         articleService.delete(id);
         return ResponseEntity.ok().build();

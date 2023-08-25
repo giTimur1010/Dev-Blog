@@ -1,0 +1,1 @@
+ALTER TABLE public.usr ADD CONSTRAINT username_unique UNIQUE (username);

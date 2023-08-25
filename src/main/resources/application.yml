@@ -12,4 +12,4 @@ spring:
 
 application:
   cron-task:
-    delete-small-articles-cron: " 0 0 0 * * *"
+    deleteSmallArticlesCron: "0 0 0 * * *"
