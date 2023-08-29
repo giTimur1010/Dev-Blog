@@ -21,6 +21,7 @@ public class ArticleController {
     private final ArticleService articleService;
 
     @PostMapping
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     public ResponseEntity<NewArticleResponse> createArticle(@RequestBody NewArticleRequest request){
         return ResponseEntity.status(HttpStatus.CREATED.value()).body(articleService.add(request));
     }

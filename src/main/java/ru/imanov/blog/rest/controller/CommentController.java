@@ -23,6 +23,7 @@ public class CommentController {
     private final CommentService commentService;
 
     @PostMapping
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     public ResponseEntity<NewCommentResponse> createComment(@RequestBody NewCommentRequest request){
         return ResponseEntity.status(HttpStatus.CREATED.value()).body(commentService.add(request));
     }
