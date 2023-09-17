@@ -5,7 +5,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import ru.imanov.blog.entity.AbstractEntity;
 import ru.imanov.blog.entity.Article;
-import ru.imanov.blog.entity.Tag;
 import ru.imanov.blog.entity.User;
 import ru.imanov.blog.exception.article.ArticleFieldsEmptyException;
 import ru.imanov.blog.exception.article.ArticleNotFoundException;
@@ -27,6 +26,7 @@ import ru.imanov.blog.service.ArticleService;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 /**
@@ -117,13 +117,13 @@ public class ArticleServiceImpl implements ArticleService {
         article.setComments(
                 request.getCommentsIds().stream()
                         .map(id -> commentRepository.findById(id).get())
-                        .toList()
+                        .collect(Collectors.toList())
         );
 
         article.setTags(
                 request.getTagsIds().stream()
                         .map(id -> tagRepository.findById(id).get())
-                        .toList()
+                        .collect(Collectors.toList())
         );
 
         if (article.getCreatedDate() != null && article.getCreatedDate().isAfter(LocalDateTime.now())){
@@ -209,7 +209,7 @@ public class ArticleServiceImpl implements ArticleService {
 
         return articles.stream()
                 .map(this::transform)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     /**
@@ -268,7 +268,7 @@ public class ArticleServiceImpl implements ArticleService {
         if (article.getComments() != null){
             List<Long> commentIds = article.getComments().stream()
                     .map(AbstractEntity::getId)
-                    .toList();
+                    .collect(Collectors.toList());
 
             articleAllFields.setCommentsIds(commentIds);
         }
@@ -276,7 +276,7 @@ public class ArticleServiceImpl implements ArticleService {
         if (article.getTags() != null) {
             List<Long> tagsIds = article.getTags().stream()
                     .map(AbstractEntity::getId)
-                    .toList();
+                    .collect(Collectors.toList());
             articleAllFields.setTagsIds(tagsIds);
         }
 

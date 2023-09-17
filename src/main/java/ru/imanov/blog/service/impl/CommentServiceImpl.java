@@ -24,6 +24,7 @@ import ru.imanov.blog.service.CommentService;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author itimur
@@ -176,7 +177,7 @@ public class CommentServiceImpl implements CommentService {
     public List<CommentAllFields> getAllArticleComments(Long articleId) {
         return commentRepository.findAllByArticleId(articleId).stream()
                 .map(this::transform)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     /**

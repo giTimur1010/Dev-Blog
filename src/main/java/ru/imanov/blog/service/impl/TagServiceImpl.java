@@ -20,6 +20,7 @@ import ru.imanov.blog.service.TagService;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -86,7 +87,7 @@ public class TagServiceImpl implements TagService {
         if (request.getChildrenIds() != null){
             List<Tag> children = request.getChildrenIds().stream().
                     map(id -> tagRepository.findById(id).get())
-                    .toList();
+                    .collect(Collectors.toList());
 
             tag.setChildren(children);
         }
@@ -94,7 +95,7 @@ public class TagServiceImpl implements TagService {
         if (request.getArticleIds() != null){
             List<Article> articles = request.getArticleIds().stream()
                     .map(id -> articleRepository.findById(id).get())
-                    .toList();
+                    .collect(Collectors.toList());
 
             tag.setArticles(articles);
         }
@@ -194,7 +195,7 @@ public class TagServiceImpl implements TagService {
         if (tag.getChildren() != null){
             List<Long> childrenIds = tag.getChildren().stream()
                     .map(AbstractEntity::getId)
-                    .toList();
+                    .collect(Collectors.toList());
 
             tagAllFields.setChildrenIds(childrenIds);
         }
@@ -202,7 +203,7 @@ public class TagServiceImpl implements TagService {
         if (tag.getArticles() != null){
             List<Long> articleIds = tag.getArticles().stream()
                     .map(AbstractEntity::getId)
-                    .toList();
+                    .collect(Collectors.toList());
 
             tagAllFields.setArticleIds(articleIds);
         }

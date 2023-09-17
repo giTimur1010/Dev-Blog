@@ -129,13 +129,6 @@ public class UserServiceImpl implements UserService, UserDetailsService {
      */
     @Override
     public void add(RegistrationRequest request)  throws UserAlreadyExistsException {
-
-        if (userRepository.existsUserByUsername(request.getUsername())) {
-            throw new UserAlreadyExistsException(
-                    String.format("User with username $s already exists", request.getUsername())
-            );
-        }
-
         User user = User.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
@@ -144,6 +137,12 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 .build();
 
         checkUser(user);
+
+        if (userRepository.existsUserByUsername(request.getUsername())) {
+            throw new UserAlreadyExistsException(
+                    String.format("User with username %s already exists", request.getUsername())
+            );
+        }
 
         userRepository.save(user);
     }
