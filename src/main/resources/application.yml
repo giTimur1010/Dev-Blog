@@ -1,8 +1,8 @@
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/DevBlog
-    username: postgres
-    password: 221103
+    username: root
+    password: root
 
   jpa:
     generate-ddl: false

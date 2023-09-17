@@ -10,7 +10,6 @@ CREATE TABLE public.usr (
                             CONSTRAINT userid_pk PRIMARY KEY (id)
 );
 
-ALTER TABLE public.usr OWNER TO postgres;
 
 CREATE TABLE public.article (
                                 id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ,
@@ -23,7 +22,6 @@ CREATE TABLE public.article (
                                 CONSTRAINT articleid_pk PRIMARY KEY (id)
 );
 
-ALTER TABLE public.article OWNER TO postgres;
 
 CREATE TABLE public.comment (
                                 id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ,
@@ -36,7 +34,6 @@ CREATE TABLE public.comment (
                                 CONSTRAINT commentpk PRIMARY KEY (id)
 );
 
-ALTER TABLE public.comment OWNER TO postgres;
 
 CREATE TABLE public.tag (
                             id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ,
@@ -44,7 +41,6 @@ CREATE TABLE public.tag (
                             name varchar(100) NOT NULL,
                             CONSTRAINT tag_pk PRIMARY KEY (id) );
 
-ALTER TABLE public.tag OWNER TO postgres;
 
 ALTER TABLE public.article ADD CONSTRAINT user_fk FOREIGN KEY (id_user)
     REFERENCES public.usr (id) MATCH FULL
