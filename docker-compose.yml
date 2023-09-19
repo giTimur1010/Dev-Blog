@@ -1,4 +1,4 @@
-version: '2'
+version: '3'
 
 services:
   db:
@@ -6,11 +6,9 @@ services:
     restart: always
     container_name: db
     environment:
-      POSTGRES_PASSWORD: root
-      POSTGRES_USER: root
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 221103
       POSTGRES_DB: DevBlog
-    ports:
-      - 5432:5432
 
 
   app:
@@ -21,7 +19,7 @@ services:
     restart: always
     container_name: app
     ports:
-      - 8080:8080
+      - 8000:8080
     depends_on:
       - db
     environment:

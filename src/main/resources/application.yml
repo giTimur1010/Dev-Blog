@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/DevBlog
-    username: root
-    password: root
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/DevBlog}
+    username: postgres
+    password: 221103
 
   jpa:
     generate-ddl: false

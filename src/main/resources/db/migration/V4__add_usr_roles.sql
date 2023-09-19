@@ -7,7 +7,8 @@ create table public.role
     CONSTRAINT usr_role_pk PRIMARY KEY (id)
 );
 
-
+ALTER TABLE public.role
+    OWNER TO postgres;
 
 create table public.usr_roles
 (
@@ -16,6 +17,8 @@ create table public.usr_roles
     CONSTRAINT many_usr_has_many_role PRIMARY KEY (id_role, id_usr)
 );
 
+alter table public.usr_roles
+    owner to postgres;
 
 --fill in data
 
